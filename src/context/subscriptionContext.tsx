@@ -2,17 +2,11 @@
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import axios from "axios";
-import { SubscriptionFormValues } from "@/utility/types";
+import { SubscriptionFormValues , SubscriptionContextType } from "@/utility/types";
+import { toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
-interface SubscriptionContextType {
-  allSubscriptions: SubscriptionFormValues[];
-  getAllSubscription: () => Promise<void>;
-  createSubscription: (values: SubscriptionFormValues) => Promise<void>;
-  updateSubscription: (id: number, values: SubscriptionFormValues) => Promise<void>;
-  deleteSubscription: (id: number) => Promise<void>;
-  loading: boolean;
-  totalSubscriptions: number;
-}
+
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
@@ -24,36 +18,47 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
   const baseUrl = "https://gymadel.runasp.net/api/Subscription";
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
 
-  const getAllSubscription = async () => {
-    setLoading(true);
-    try {
-      const { data } = await axios.get(`${baseUrl}/GetSubscriptions`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+ const getAllSubscription = async () => {
+  setLoading(true);
+  try {
+    const { data } = await axios.get(`${baseUrl}/GetSubscriptions`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      const subscriptions = Array.isArray(data) ? data : data.data || [];
-      setAllSubscriptions(subscriptions);
-      setTotalSubscriptions(subscriptions.length);
-    } catch (err) {
-      console.error("Error fetching subscriptions:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // تأكد من الوصول إلى array
+    const subscriptions = Array.isArray(data) ? data : data.data || [];
+    setAllSubscriptions(subscriptions);
+    setTotalSubscriptions(subscriptions.length);
+    console.log("Fetched Subscriptions:", subscriptions);
+  } catch (err) {
+    console.error("Error fetching subscriptions:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const createSubscription = async (values: SubscriptionFormValues) => {
-    setLoading(true);
-    try {
-      await axios.post(`${baseUrl}/CreateSubscription`, values, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      await getAllSubscription();
-    } catch (err) {
-      console.error("Error creating subscription:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+
+const createSubscription = async (values: SubscriptionFormValues) => {
+  setLoading(true);
+  try {
+    const token = localStorage.getItem("token");
+    await axios.post(`${baseUrl}/CreateSubscription`, values, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+
+    // جلب البيانات المحدثة من السيرفر
+    await getAllSubscription();
+
+    toast.success("تم إنشاء الاشتراك بنجاح!");
+  } catch (err: any) {
+    console.error("Error creating subscription:", err.response || err);
+    toast.error(err.response?.data?.message || "حدث خطأ أثناء إنشاء الاشتراك");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const updateSubscription = async (id: number, values: SubscriptionFormValues) => {
     setLoading(true);

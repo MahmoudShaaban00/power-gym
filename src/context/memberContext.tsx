@@ -3,29 +3,9 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { MemberFormValues } from "@/utility/types";
+import { MemberFormValues , MemberContextType , Member } from "@/utility/types";
 
-interface Member {
-  id: string;
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  pay: number;
-  restMoney: number;
-  subscriptionId: number;
-}
 
-interface MemberContextType {
-  createMember: (values: MemberFormValues) => Promise<void>;
-  getMembers: (subscriptionId: string, pageSize: number, pageIndex: number) => Promise<void>;
-  deleteMember: (id: string) => Promise<void>;
-  updateMember: (id: string, values: MemberFormValues) => Promise<void>;
-  members: Member[];
-  loading: boolean;
-  totalPages: number;
-  totalCount: number;
-  totalMembers: number;
-}
 
 const MemberContext = createContext<MemberContextType | undefined>(undefined);
 

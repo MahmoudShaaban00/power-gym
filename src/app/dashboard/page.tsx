@@ -5,10 +5,12 @@ import { useMember } from "@/context/memberContext";
 import { useSubscription } from "@/context/subscriptionContext";
 import { ResponsivePie } from "@nivo/pie";
 import { ResponsiveBar } from "@nivo/bar";
+import { useTrainer } from "@/context/trainerContext";
 
 export default function DashboardPage() {
   const { members, getMembers, totalMembers } = useMember();
   const { getAllSubscription, totalSubscriptions } = useSubscription();
+  const { totalTrainers , getTrainers } = useTrainer();
 
   const [phoneChartData, setPhoneChartData] = useState<any[]>([]);
   const [payRestChartData, setPayRestChartData] = useState<any[]>([]);
@@ -19,6 +21,7 @@ export default function DashboardPage() {
   useEffect(() => {
     getMembers(subscriptionId, pageSize, 1);
     getAllSubscription();
+      getTrainers({ specializationId: 0, pageSize: 1000, pageIndex: 1, search: "" });
   }, []);
 
   useEffect(() => {
@@ -53,7 +56,7 @@ export default function DashboardPage() {
       <h1 className="text-3xl font-bold mb-6 text-gray-800">Dashboard Overview</h1>
 
       {/* Summary */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-bold mb-2">Total Members</h2>
           <p className="text-2xl">{totalMembers}</p>
@@ -61,6 +64,11 @@ export default function DashboardPage() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-bold mb-2">Total Subscriptions</h2>
           <p className="text-2xl">{totalSubscriptions}</p>
+        </div>
+
+         <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-bold mb-2">Total Trainers</h2>
+          <p className="text-2xl">{totalTrainers}</p>
         </div>
       </div>
 

@@ -55,3 +55,98 @@ export interface InputFieldProps {
   onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
   error?: string | boolean;
 }
+
+// ----------------------------
+// Trainer Form Values
+// ----------------------------
+export interface TrainerFormValues {
+  fullName: string;
+  phoneNumber: string;
+  specializationIds: number[];
+}
+
+// ----------------------------
+// Trainer Form Values
+// ----------------------------
+export interface Trainer {
+  id: string;
+  fullName: string;
+  phoneNumber: string;
+  specializations: string[];
+}
+
+
+// ----------------------------
+// Trainer Context Type
+// ----------------------------
+export interface TrainerContextType {
+  trainers: Trainer[];
+  loading: boolean;
+  totalCount: number;
+  getTrainers: (filters: any) => Promise<void>;
+  createTrainer: (values: any) => Promise<void>;
+  updateTrainer: (id: string, values: any) => Promise<void>;
+  deleteTrainer: (id: string) => Promise<void>;
+  totalTrainers: number;
+}
+
+// ----------------------------
+// Subscription Context Type
+ export interface SubscriptionContextType {
+  allSubscriptions: SubscriptionFormValues[];
+  getAllSubscription: () => Promise<void>;
+  createSubscription: (values: SubscriptionFormValues) => Promise<void>;
+  updateSubscription: (id: number, values: SubscriptionFormValues) => Promise<void>;
+  deleteSubscription: (id: number) => Promise<void>;
+  loading: boolean;
+  totalSubscriptions: number;
+}
+
+// ----------------------------
+// Specialization Type
+// ----------------------------
+export interface Specialization {
+  id: string;
+  name: string;
+}
+
+// ----------------------------
+// Specialization Context Type
+// ----------------------------
+export interface SpecializationContextType {
+  specializations: Specialization[];
+  loading: boolean;
+  getSpecializations: (token: string) => Promise<void>;
+  createSpecialization: (name: string, token: string) => Promise<void>;
+  updateSpecialization: (id: string, name: string, token: string) => Promise<void>;
+  deleteSpecialization: (id: string, token: string) => Promise<void>;
+}
+
+// ----------------------------
+// Member Type
+// ----------------------------
+export interface Member {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  pay: number;
+  restMoney: number;
+  subscriptionId: string;
+}
+
+// ----------------------------
+// Member Context Type
+// ----------------------------
+export interface MemberContextType {
+  loading: boolean;
+  members: Member[];
+  totalPages: number;
+  totalCount: number;
+  totalMembers: number;
+  createMember: (values: MemberFormValues) => Promise<void>;
+  getMembers: (subscriptionId: string, pageSize: number, pageIndex: number) => Promise<void>;
+  deleteMember: (id: string) => Promise<void>;
+  updateMember: (id: string, values: MemberFormValues) => Promise<void>;
+}
+

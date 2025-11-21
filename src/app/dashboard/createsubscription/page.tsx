@@ -48,7 +48,7 @@ export default function CreateSubscriptionPage() {
           <FormInput label="الاسم" name="name" icon={<Dumbbell />} formik={formik} />
           <FormInput label="المدة (شهور)" name="duration" type="number" icon={<Calendar />} formik={formik} />
           <FormInput label="رقم الهاتف" name="phone" icon={<Dumbbell />} formik={formik} />
-          <FormInput label="رقم النادي" name="fitnessNumber" type="number" icon={<Dumbbell />} formik={formik} />
+          <FormInput label="عدد حصص اللياقة" name="fitnessNumber" type="number" icon={<Dumbbell />} formik={formik} />
           <FormInput label="عدد الجلسات" name="sessionsNumber" type="number" icon={<Calendar />} formik={formik} />
           <FormInput label="عدد الدعوات" name="inviteCount" type="number" icon={<Gift />} formik={formik} />
           <FormInput label="عدد الأيام في الأسبوع" name="daysPerWeek" type="number" icon={<Calendar />} formik={formik} />
