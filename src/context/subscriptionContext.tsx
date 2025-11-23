@@ -2,11 +2,9 @@
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import axios from "axios";
-import { SubscriptionFormValues , SubscriptionContextType } from "@/utility/types";
 import { toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
-
-
+import "react-toastify/dist/ReactToastify.css";
+import { SubscriptionFormValues, SubscriptionContextType } from "@/utility/types";
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
@@ -16,73 +14,100 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
   const [totalSubscriptions, setTotalSubscriptions] = useState(0);
 
   const baseUrl = "https://gymadel.runasp.net/api/Subscription";
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
 
- const getAllSubscription = async () => {
-  setLoading(true);
-  try {
-    const { data } = await axios.get(`${baseUrl}/GetSubscriptions`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    // تأكد من الوصول إلى array
-    const subscriptions = Array.isArray(data) ? data : data.data || [];
-    setAllSubscriptions(subscriptions);
-    setTotalSubscriptions(subscriptions.length);
-    console.log("Fetched Subscriptions:", subscriptions);
-  } catch (err) {
-    console.error("Error fetching subscriptions:", err);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-const createSubscription = async (values: SubscriptionFormValues) => {
-  setLoading(true);
-  try {
+  // ===========================
+  //          GET
+  // ===========================
+  const getAllSubscription = async () => {
     const token = localStorage.getItem("token");
-    await axios.post(`${baseUrl}/CreateSubscription`, values, {
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    });
+    if (!token) return;
 
-    // جلب البيانات المحدثة من السيرفر
-    await getAllSubscription();
-
-    toast.success("تم إنشاء الاشتراك بنجاح!");
-  } catch (err: any) {
-    console.error("Error creating subscription:", err.response || err);
-    toast.error(err.response?.data?.message || "حدث خطأ أثناء إنشاء الاشتراك");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
-  const updateSubscription = async (id: number, values: SubscriptionFormValues) => {
     setLoading(true);
     try {
-      await axios.put(`${baseUrl}/UpdateSubscription/${id}`, values, {
+      const { data } = await axios.get(`${baseUrl}/GetSubscriptions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      await getAllSubscription();
+
+      const subscriptions = data?.data || [];
+      setAllSubscriptions(subscriptions);
+      setTotalSubscriptions(subscriptions.length);
+      console.log("Fetched Subscriptions:", subscriptions);
     } catch (err) {
-      console.error("Error updating subscription:", err);
+      console.error("Error fetching subscriptions:", err);
+      toast.error("فشل جلب الاشتراكات");
     } finally {
       setLoading(false);
     }
   };
 
+  // ===========================
+  //          CREATE
+  // ===========================
+  const createSubscription = async (values: SubscriptionFormValues) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setLoading(true);
+    try {
+      await axios.post(`${baseUrl}/CreateSubscription`, values, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+
+      toast.success("تم إنشاء الاشتراك بنجاح!");
+      await getAllSubscription();
+    } catch (err: unknown) {
+      console.error("Error creating subscription:", err);
+      if (axios.isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "حدث خطأ أثناء إنشاء الاشتراك");
+      } else {
+        toast.error("حدث خطأ غير متوقع");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===========================
+  //          UPDATE
+  // ===========================
+  const updateSubscription = async (id: number, values: SubscriptionFormValues) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setLoading(true);
+    try {
+      await axios.put(`${baseUrl}/UpdateSubscription/${id}`, values, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      toast.success("تم تحديث الاشتراك بنجاح!");
+      await getAllSubscription();
+    } catch (err) {
+      console.error("Error updating subscription:", err);
+      toast.error("حدث خطأ أثناء تحديث الاشتراك");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===========================
+  //          DELETE
+  // ===========================
   const deleteSubscription = async (id: number) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     setLoading(true);
     try {
       await axios.delete(`${baseUrl}/DeleteSubscription/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      toast.success("تم حذف الاشتراك بنجاح!");
       await getAllSubscription();
     } catch (err) {
       console.error("Error deleting subscription:", err);
+      toast.error("حدث خطأ أثناء حذف الاشتراك");
     } finally {
       setLoading(false);
     }

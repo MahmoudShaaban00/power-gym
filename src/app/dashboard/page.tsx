@@ -1,100 +1,132 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useMember } from "@/context/memberContext";
-import { useSubscription } from "@/context/subscriptionContext";
-import { ResponsivePie } from "@nivo/pie";
+import React, { useEffect, useState, useCallback } from "react";
+import axios from "axios";
 import { ResponsiveBar } from "@nivo/bar";
-import { useTrainer } from "@/context/trainerContext";
+import { ResponsivePie } from "@nivo/pie";
+
+interface Member {
+  id: string;
+  name: string;
+  pay: number;
+  restMoney: number;
+}
+
+interface Subscription {
+  id: string;
+  name: string;
+  duration: number;
+  price: number;
+  fitnessNumber: number;
+  sessionsNumber: number;
+  inviteCount: number;
+  daysPerWeek: number;
+}
+
+interface Specialization {
+  id: string;
+  name: string;
+}
+
+interface BarData {
+  category: string;
+  value: number;
+  [key: string]: string | number;
+}
 
 export default function DashboardPage() {
-  const { members, getMembers, totalMembers } = useMember();
-  const { getAllSubscription, totalSubscriptions } = useSubscription();
-  const { totalTrainers , getTrainers } = useTrainer();
+  const [members, setMembers] = useState<Member[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [specializations, setSpecializations] = useState<Specialization[]>([]);
+  const [payRestChartData, setPayRestChartData] = useState<BarData[]>([]);
 
-  const [phoneChartData, setPhoneChartData] = useState<any[]>([]);
-  const [payRestChartData, setPayRestChartData] = useState<any[]>([]);
+  const token = localStorage.getItem("token");
 
-  const pageSize = 1000; // لجلب كل الأعضاء مرة واحدة
-  const subscriptionId = ""; // ممكن تختار اشتراك محدد أو تركه فارغ
+  // دالة لجلب كل الأعضاء
+  const getAllMembers = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(
+        `https://gymadel.runasp.net/api/Member/GetMembers?pageSize=1000&pageIndex=1`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const realMembers = Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
+      setMembers(realMembers);
+    } catch (err) {
+      console.error("Error fetching all members", err);
+    }
+  }, [token]);
+
+  // دالة لجلب كل الاشتراكات
+  const getAllSubscriptions = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(
+        `https://gymadel.runasp.net/api/Subscription/GetSubscriptions`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const subs = Array.isArray(res.data?.data) ? res.data.data : [];
+      setSubscriptions(subs);
+    } catch (err) {
+      console.error("Error fetching subscriptions", err);
+    }
+  }, [token]);
+
+  // دالة لجلب كل التخصصات
+  const getAllSpecializations = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(
+        `https://gymadel.runasp.net/api/Specialization/GetSpecializations`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const specs = Array.isArray(res.data?.data) ? res.data.data : [];
+      setSpecializations(specs);
+    } catch (err) {
+      console.error("Error fetching specializations", err);
+    }
+  }, [token]);
 
   useEffect(() => {
-    getMembers(subscriptionId, pageSize, 1);
-    getAllSubscription();
-      getTrainers({ specializationId: 0, pageSize: 1000, pageIndex: 1, search: "" });
-  }, []);
+    getAllMembers();
+    getAllSubscriptions();
+    getAllSpecializations();
+  }, [getAllMembers, getAllSubscriptions, getAllSpecializations]);
 
   useEffect(() => {
-    // تجميع الأعضاء حسب بادئة رقم الهاتف
-    const phoneCounts: Record<string, number> = {};
-    members.forEach(m => {
-      const prefix = m.phoneNumber.slice(0, 3); // 010, 011, 012, 015
-      phoneCounts[prefix] = (phoneCounts[prefix] || 0) + 1;
-    });
-
-    const phoneData = Object.entries(phoneCounts).map(([prefix, count]) => ({
-      id: prefix,
-      label: prefix,
-      value: count
-    }));
-
-    setPhoneChartData(phoneData);
-
-    // بيانات pay vs restMoney
-    const totalPay = members.reduce((sum, m) => sum + Number(m.pay), 0);
-    const totalRest = members.reduce((sum, m) => sum + Number(m.restMoney), 0);
+    const totalPayed = members.reduce((acc, m) => acc + Number(m.pay), 0);
+    const totalRemaining = members.reduce((acc, m) => acc + Number(m.restMoney), 0);
 
     setPayRestChartData([
-      { category: "Paid", value: totalPay },
-      { category: "Remaining", value: totalRest }
+      { category: "Paid", value: totalPayed },
+      { category: "Remaining", value: totalRemaining },
     ]);
-
   }, [members]);
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Dashboard Overview</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">لوحة التحكم</h1>
 
-      {/* Summary */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-bold mb-2">Total Members</h2>
-          <p className="text-2xl">{totalMembers}</p>
+      {/* Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="bg-white shadow rounded-lg p-6 flex flex-col items-center">
+          <h2 className="text-xl font-semibold text-gray-700">الأعضاء</h2>
+          <p className="text-3xl font-bold text-blue-600 mt-2">{members.length}</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-bold mb-2">Total Subscriptions</h2>
-          <p className="text-2xl">{totalSubscriptions}</p>
+        <div className="bg-white shadow rounded-lg p-6 flex flex-col items-center">
+          <h2 className="text-xl font-semibold text-gray-700">الاشتراكات</h2>
+          <p className="text-3xl font-bold text-green-600 mt-2">{subscriptions.length}</p>
         </div>
-
-         <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-bold mb-2">Total Trainers</h2>
-          <p className="text-2xl">{totalTrainers}</p>
+        <div className="bg-white shadow rounded-lg p-6 flex flex-col items-center">
+          <h2 className="text-xl font-semibold text-gray-700">التخصصات</h2>
+          <p className="text-3xl font-bold text-purple-600 mt-2">{specializations.length}</p>
         </div>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded-lg shadow h-[400px]">
-          <h2 className="text-xl font-bold mb-4 text-center">Members by Phone Prefix</h2>
-          <ResponsivePie
-            data={phoneChartData}
-            margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
-            innerRadius={0.5}
-            padAngle={0.7}
-            cornerRadius={3}
-            colors={{ scheme: "nivo" }}
-            borderWidth={1}
-            borderColor={{ from: "color", modifiers: [["darker", 0.2]] }}
-            enableArcLinkLabels={true}
-            arcLinkLabelsTextColor="#333"
-            arcLinkLabelsThickness={2}
-            arcLinkLabelsColor={{ from: "color" }}
-            enableArcLabels={true}
-            arcLabelsTextColor={{ from: "color", modifiers: [["darker", 2]] }}
-          />
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow h-[400px]">
+      {/* Charts Side by Side on large screens */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Bar Chart */}
+        <div className="w-full h-[400px] bg-white shadow rounded-lg p-4">
           <h2 className="text-xl font-bold mb-4 text-center">Total Paid vs Remaining</h2>
           <ResponsiveBar
             data={payRestChartData}
@@ -102,14 +134,58 @@ export default function DashboardPage() {
             indexBy="category"
             margin={{ top: 50, right: 50, bottom: 50, left: 60 }}
             padding={0.3}
-            colors={{ scheme: "paired" }}
             valueScale={{ type: "linear" }}
             indexScale={{ type: "band", round: true }}
-            axisBottom={{ tickSize: 5, tickPadding: 5, tickRotation: 0 }}
-            axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0 }}
+            colors={{ scheme: "nivo" }}
+            borderColor={{ from: "color", modifiers: [["darker", 1.6]] }}
+            axisTop={null}
+            axisRight={null}
+            axisBottom={{
+              tickSize: 5,
+              tickPadding: 5,
+              tickRotation: 0,
+              legend: "Category",
+              legendPosition: "middle",
+              legendOffset: 32,
+            }}
+            axisLeft={{
+              tickSize: 5,
+              tickPadding: 5,
+              tickRotation: 0,
+              legend: "Value",
+              legendPosition: "middle",
+              legendOffset: -40,
+            }}
             labelSkipWidth={12}
             labelSkipHeight={12}
             labelTextColor={{ from: "color", modifiers: [["darker", 1.6]] }}
+            animate={true}
+            motionConfig="gentle"
+          />
+        </div>
+
+        {/* Pie Chart */}
+        <div className="w-full h-[400px] bg-white shadow rounded-lg p-4">
+          <h2 className="text-xl font-bold mb-4 text-center">Total Distribution</h2>
+          <ResponsivePie
+            data={[
+              { id: "Members", value: members.length },
+              { id: "Subscriptions", value: subscriptions.length },
+              { id: "Specializations", value: specializations.length },
+            ]}
+            margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
+            innerRadius={0.5}
+            padAngle={0.7}
+            cornerRadius={3}
+            activeOuterRadiusOffset={8}
+            borderWidth={1}
+            borderColor={{ from: "color", modifiers: [["darker", 0.2]] }}
+            arcLinkLabelsSkipAngle={10}
+            arcLinkLabelsTextColor="#333"
+            arcLinkLabelsThickness={2}
+            arcLinkLabelsColor={{ from: "color" }}
+            arcLabelsSkipAngle={10}
+            arcLabelsTextColor={{ from: "color", modifiers: [["darker", 2]] }}
           />
         </div>
       </div>

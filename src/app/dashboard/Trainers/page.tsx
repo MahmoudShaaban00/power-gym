@@ -1,32 +1,49 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useTrainer } from "../../../context/trainerContext";
+import { TrainerFormValues, Trainer } from "@/utility/types";
 
 export default function TrainersListPage() {
-  const { trainers, getTrainers, updateTrainer, deleteTrainer, loading, totalCount } =
-    useTrainer();
+  const {
+    trainers,
+    getTrainers,
+    updateTrainer,
+    deleteTrainer,
+    loading,
+    totalCount,
+  } = useTrainer();
 
   const [search, setSearch] = useState("");
-  const [specializationIdInput, setSpecializationIdInput] = useState(""); 
+  const [specializationIdInput, setSpecializationIdInput] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValues, setEditValues] = useState<any>({});
-  const [pageIndex, setPageIndex] = useState(1);
 
+  const [editValues, setEditValues] = useState<TrainerFormValues>({
+    fullName: "",
+    phoneNumber: "",
+    specializationIds: [],
+  });
+
+  const [pageIndex, setPageIndex] = useState(1);
   const pageSize = 5;
 
   // البحث وتحميل المدربين
-  const handleSearch = async (newPageIndex = 1) => {
-    setPageIndex(newPageIndex);
-    const specializationId = specializationIdInput ? parseInt(specializationIdInput) : 2;
+  const handleSearch = useCallback(
+    async (newPageIndex = 1) => {
+      setPageIndex(newPageIndex);
+      const specializationId = specializationIdInput
+        ? parseInt(specializationIdInput)
+        : undefined;
 
-    await getTrainers({
-      specializationId,
-      pageSize,
-      pageIndex: newPageIndex,
-      search,
-    });
-  };
+      await getTrainers({
+        specializationId,
+        pageSize,
+        pageIndex: newPageIndex,
+        search,
+      });
+    },
+    [specializationIdInput, search, getTrainers]
+  );
 
   useEffect(() => {
     handleSearch(1);
@@ -36,9 +53,8 @@ export default function TrainersListPage() {
     if (e.key === "Enter") handleSearch(1);
   };
 
-  // تعديل المدرب
+  // حفظ التعديل
   const handleUpdate = async (id: string) => {
-    if (!editingId) return;
     try {
       await updateTrainer(id, editValues);
       setEditingId(null);
@@ -62,7 +78,9 @@ export default function TrainersListPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6 text-blue-700">👨‍🏫 قائمة المدربين</h1>
+      <h1 className="text-3xl font-bold mb-6 text-blue-700">
+        👨‍🏫 قائمة المدربين
+      </h1>
 
       {/* البحث */}
       <div className="mb-6 flex gap-3 flex-wrap">
@@ -74,6 +92,7 @@ export default function TrainersListPage() {
           placeholder="ابحث بالاسم..."
           className="border p-2 rounded w-64 focus:ring-2 focus:ring-blue-200 outline-none"
         />
+
         <input
           type="text"
           value={specializationIdInput}
@@ -82,6 +101,7 @@ export default function TrainersListPage() {
           placeholder="أدخل رقم التخصص"
           className="border p-2 rounded w-64 focus:ring-2 focus:ring-blue-200 outline-none"
         />
+
         <button
           onClick={() => handleSearch(1)}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
@@ -90,7 +110,9 @@ export default function TrainersListPage() {
         </button>
       </div>
 
-      {loading && <p className="text-gray-500 mb-3 animate-pulse">جارٍ التحميل...</p>}
+      {loading && (
+        <p className="text-gray-500 mb-3 animate-pulse">جارٍ التحميل...</p>
+      )}
 
       <p className="mb-4 text-gray-600">عدد النتائج: {totalCount}</p>
 
@@ -114,17 +136,21 @@ export default function TrainersListPage() {
                 </td>
               </tr>
             ) : (
-              trainers.map((trainer) => (
+              trainers.map((trainer: Trainer) => (
                 <tr
                   key={trainer.id}
                   className="border-b hover:bg-gray-50 transition"
                 >
+                  {/* الاسم */}
                   <td className="p-2">
                     {editingId === trainer.id ? (
                       <input
                         value={editValues.fullName}
                         onChange={(e) =>
-                          setEditValues({ ...editValues, fullName: e.target.value })
+                          setEditValues({
+                            ...editValues,
+                            fullName: e.target.value,
+                          })
                         }
                         className="border px-2 py-1 rounded w-full"
                       />
@@ -133,12 +159,16 @@ export default function TrainersListPage() {
                     )}
                   </td>
 
+                  {/* رقم الهاتف */}
                   <td className="p-2">
                     {editingId === trainer.id ? (
                       <input
                         value={editValues.phoneNumber}
                         onChange={(e) =>
-                          setEditValues({ ...editValues, phoneNumber: e.target.value })
+                          setEditValues({
+                            ...editValues,
+                            phoneNumber: e.target.value,
+                          })
                         }
                         className="border px-2 py-1 rounded w-full"
                       />
@@ -147,8 +177,10 @@ export default function TrainersListPage() {
                     )}
                   </td>
 
+                  {/* التخصصات */}
                   <td className="p-2">{trainer.specializations?.join(", ")}</td>
 
+                  {/* الإجراءات */}
                   <td className="p-2 flex justify-center gap-2">
                     {editingId === trainer.id ? (
                       <>
@@ -170,12 +202,17 @@ export default function TrainersListPage() {
                         <button
                           onClick={() => {
                             setEditingId(trainer.id);
-                            setEditValues(trainer);
+                            setEditValues({
+                              fullName: trainer.fullName,
+                              phoneNumber: trainer.phoneNumber,
+                              specializationIds: [],
+                            });
                           }}
                           className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition"
                         >
                           تعديل
                         </button>
+
                         <button
                           onClick={() => handleDeleteTrainer(trainer.id)}
                           className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
@@ -201,9 +238,11 @@ export default function TrainersListPage() {
         >
           السابق
         </button>
+
         <span className="px-2 py-2">
           {pageIndex} / {totalPages}
         </span>
+
         <button
           disabled={pageIndex === totalPages}
           onClick={() => handleSearch(pageIndex + 1)}

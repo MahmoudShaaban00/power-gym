@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { MemberFormValues , MemberContextType , Member } from "@/utility/types";
+import { MemberFormValues, MemberContextType, Member } from "@/utility/types";
 
 
 
@@ -28,9 +28,16 @@ export const MemberProvider = ({ children }: { children: ReactNode }) => {
       const { data } = await axios.post(`${baseUrl}/CreateMember`, values, { headers: authHeader() });
       toast.success("Member created successfully!");
       setMembers(prev => [...prev, data]);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Error creating member");
-    } finally {
+    } catch (err: unknown) {
+      console.error("Error creating subscription:", err);
+
+      if (axios.isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "حدث خطأ أثناء إنشاء الاشتراك");
+      } else {
+        toast.error("حدث خطأ غير متوقع");
+      }
+    }
+    finally {
       setLoading(false);
     }
   };
@@ -76,9 +83,16 @@ export const MemberProvider = ({ children }: { children: ReactNode }) => {
       const { data } = await axios.put(`${baseUrl}/UpdateMember/${id}`, values, { headers: authHeader() });
       setMembers(prev => prev.map(m => (m.id === id ? { ...m, ...data } : m)));
       toast.success("Member updated successfully!");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Error updating member");
-    } finally {
+    } catch (err: unknown) {
+      console.error("Error creating subscription:", err);
+
+      if (axios.isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "حدث خطأ أثناء إنشاء الاشتراك");
+      } else {
+        toast.error("حدث خطأ غير متوقع");
+      }
+    }
+    finally {
       setLoading(false);
     }
   };

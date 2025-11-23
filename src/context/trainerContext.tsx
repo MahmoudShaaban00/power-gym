@@ -3,10 +3,8 @@
 import { createContext, useContext, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Trainer , TrainerContextType  } from "@/utility/types";
-
-
-
+import { Trainer, TrainerContextType } from "@/utility/types";
+import { TrainerFormValues, TrainerFilter } from "@/utility/types";
 
 const TrainerContext = createContext<TrainerContextType | undefined>(undefined);
 
@@ -18,17 +16,16 @@ export const TrainerContextProvider = ({ children }: { children: React.ReactNode
 
   const baseUrl = "https://gymadel.runasp.net/api/Trainer";
 
- 
-
   // =============================
   // 🔵 Create Trainer
   // =============================
-  const createTrainer = async (values: any) => {
-       const token = localStorage.getItem("token");
+  const createTrainer = async (values: TrainerFormValues): Promise<void> => {
+    const token = localStorage.getItem("token");
     if (!token) {
       toast.error("يجب تسجيل الدخول أولا");
       throw new Error("Unauthorized");
     }
+
     try {
       setLoading(true);
 
@@ -42,7 +39,8 @@ export const TrainerContextProvider = ({ children }: { children: React.ReactNode
       toast.success("تم إضافة المدرب بنجاح");
       await getTrainers({ specializationId: 0, pageSize: 10, pageIndex: 1, search: "" });
       console.log(response.data);
-    } catch (error: any) {
+
+    } catch (error) {
       console.error(error);
       toast.error("فشل إنشاء المدرب");
     } finally {
@@ -53,47 +51,51 @@ export const TrainerContextProvider = ({ children }: { children: React.ReactNode
   // =============================
   // 🔵 Get Trainers
   // =============================
- const getTrainers = async (filters: any) => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    toast.error("يجب تسجيل الدخول أولا");
-    throw new Error("Unauthorized");
-  }
-  try {
-    setLoading(true);
-
-    const response = await axios.get(`${baseUrl}/GetTrainers`, {
-      headers: { Authorization: `Bearer ${token}` },
-      params: {
-        SpecializationId: filters.specializationId,
-        pageSize: filters.pageSize,
-        pageIndex: filters.pageIndex,
-        search: filters.search,
-      },
-    });
-
-    const trainerList = response.data.data?.data || [];
-    setTrainers(trainerList);
-    setTotalCount(response.data.data?.count || trainerList.length);
-    setTotalTrainers(trainerList.length); // استخدم طول الـ array
-  } catch (error) {
-    console.error(error);
-    toast.error("فشل تحميل المدربين");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  // =============================
-  // 🔵 Update Trainer
-  // =============================
-  const updateTrainer = async (id: string, values: any) => {
-       const token = localStorage.getItem("token");
+  const getTrainers = async (filters: TrainerFilter): Promise<void> => {
+    const token = localStorage.getItem("token");
     if (!token) {
       toast.error("يجب تسجيل الدخول أولا");
       throw new Error("Unauthorized");
     }
+
+    try {
+      setLoading(true);
+
+      const response = await axios.get(`${baseUrl}/GetTrainers`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          SpecializationId: filters.specializationId,
+          pageSize: filters.pageSize,
+          pageIndex: filters.pageIndex,
+          search: filters.search,
+        },
+      });
+
+      const trainerList = response.data.data?.data || [];
+      setTrainers(trainerList);
+      setTotalCount(response.data.data?.count || trainerList.length);
+      setTotalTrainers(trainerList.length);
+      console.log(response)
+      
+
+    } catch (error) {
+      console.error(error);
+      toast.error("فشل تحميل المدربين");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =============================
+  // 🔵 Update Trainer
+  // =============================
+  const updateTrainer = async (id: string, values: TrainerFormValues): Promise<void> => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("يجب تسجيل الدخول أولا");
+      throw new Error("Unauthorized");
+    }
+
     try {
       setLoading(true);
 
@@ -106,6 +108,7 @@ export const TrainerContextProvider = ({ children }: { children: React.ReactNode
 
       toast.success("تم تحديث المدرب بنجاح");
       await getTrainers({ specializationId: 0, pageSize: 10, pageIndex: 1, search: "" });
+
     } catch (error) {
       console.error(error);
       toast.error("فشل تحديث المدرب");
@@ -117,12 +120,13 @@ export const TrainerContextProvider = ({ children }: { children: React.ReactNode
   // =============================
   // 🔵 Delete Trainer
   // =============================
-  const deleteTrainer = async (id: string) => {
-       const token = localStorage.getItem("token");
+  const deleteTrainer = async (id: string): Promise<void> => {
+    const token = localStorage.getItem("token");
     if (!token) {
       toast.error("يجب تسجيل الدخول أولا");
       throw new Error("Unauthorized");
     }
+
     try {
       setLoading(true);
 
@@ -133,6 +137,7 @@ export const TrainerContextProvider = ({ children }: { children: React.ReactNode
       toast.success("تم حذف المدرب بنجاح");
       setTrainers((prev) => prev.filter((t) => t.id !== id));
       setTotalCount((prev) => prev - 1);
+
     } catch (error) {
       console.error(error);
       toast.error("فشل حذف المدرب");

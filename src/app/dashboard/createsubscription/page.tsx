@@ -5,13 +5,16 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { SubscriptionFormValues } from "@/utility/types";
 import { Dumbbell, Gift, Calendar, DollarSign } from "lucide-react";
+import {useSubscription} from "../../../context/subscriptionContext";
 
 export default function CreateSubscriptionPage() {
+
+  const { createSubscription } = useSubscription();
+
   const formik = useFormik<SubscriptionFormValues>({
     initialValues: {
       name: "",
       duration: "",
-      phone: "",
       fitnessNumber: "",
       sessionsNumber: 0,
       inviteCount: 0,
@@ -21,9 +24,6 @@ export default function CreateSubscriptionPage() {
     validationSchema: Yup.object({
       name: Yup.string().required("الاسم مطلوب"),
       duration: Yup.number().required("المدة مطلوبة").typeError("يجب إدخال رقم"),
-      phone: Yup.string()
-        .matches(/^01[0-9]{9}$/, "رقم هاتف مصري غير صالح")
-        .required("رقم الهاتف مطلوب"),
       fitnessNumber: Yup.number().required("رقم النادي مطلوب").typeError("يجب إدخال رقم"),
       sessionsNumber: Yup.number().required("عدد الجلسات مطلوب").typeError("يجب إدخال رقم"),
       inviteCount: Yup.number().required("عدد الدعوات مطلوب").typeError("يجب إدخال رقم"),
@@ -32,8 +32,8 @@ export default function CreateSubscriptionPage() {
     }),
     onSubmit: (values) => {
       console.log("Subscription Data:", values);
-      alert("تم إنشاء الاشتراك بنجاح!");
       formik.resetForm();
+      createSubscription(values);
     },
   });
 
@@ -47,7 +47,6 @@ export default function CreateSubscriptionPage() {
         <form onSubmit={formik.handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormInput label="الاسم" name="name" icon={<Dumbbell />} formik={formik} />
           <FormInput label="المدة (شهور)" name="duration" type="number" icon={<Calendar />} formik={formik} />
-          <FormInput label="رقم الهاتف" name="phone" icon={<Dumbbell />} formik={formik} />
           <FormInput label="عدد حصص اللياقة" name="fitnessNumber" type="number" icon={<Dumbbell />} formik={formik} />
           <FormInput label="عدد الجلسات" name="sessionsNumber" type="number" icon={<Calendar />} formik={formik} />
           <FormInput label="عدد الدعوات" name="inviteCount" type="number" icon={<Gift />} formik={formik} />
@@ -81,7 +80,7 @@ function FormInput({
   name: keyof SubscriptionFormValues;
   type?: string;
   icon: React.ReactNode;
-  formik: any;
+  formik: ReturnType<typeof useFormik<SubscriptionFormValues>>;
 }) {
   return (
     <div className="flex flex-col">

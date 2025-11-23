@@ -13,17 +13,19 @@ export default function SpecializationsPage() {
     loading,
   } = useSpecialization();
 
-  const [name, setName] = useState("");
+  const [name, setName] = useState<string>("");
   const [editId, setEditId] = useState<string | null>(null);
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
+  // احصل على التوكن
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
 
+  // useEffect مع dependency array صحيحة
   useEffect(() => {
     getSpecializations(token);
-  }, []);
+  }, [getSpecializations, token]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // handle submit
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (editId) {
@@ -32,9 +34,11 @@ export default function SpecializationsPage() {
     } else {
       await createSpecialization(name, token);
     }
+
     setName("");
   };
 
+  // بدء التعديل
   const startEdit = (id: string, currentName: string) => {
     setEditId(id);
     setName(currentName);
@@ -59,10 +63,9 @@ export default function SpecializationsPage() {
           <div className="flex gap-3">
             <button
               type="submit"
-              className={`px-6 py-2 rounded-lg text-white font-semibold transition shadow-md ${editId
-                  ? "bg-yellow-500 hover:bg-yellow-600"
-                  : "bg-blue-600 hover:bg-blue-700"
-                }`}
+              className={`px-6 py-2 rounded-lg text-white font-semibold transition shadow-md ${
+                editId ? "bg-yellow-500 hover:bg-yellow-600" : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
               {loading ? "جارٍ التنفيذ..." : editId ? "تعديل" : "إضافة"}
             </button>
@@ -99,9 +102,7 @@ export default function SpecializationsPage() {
                 className="flex justify-between items-center bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition"
               >
                 <span className="text-lg font-medium text-gray-700">{sp.id}</span>
-
                 <span className="text-lg font-medium text-gray-700">{sp.name}</span>
-
                 <div className="flex gap-2">
                   <button
                     onClick={() => startEdit(sp.id, sp.name)}
@@ -109,7 +110,6 @@ export default function SpecializationsPage() {
                   >
                     تعديل
                   </button>
-
                   <button
                     onClick={() => deleteSpecialization(sp.id, token)}
                     className="px-4 py-1 rounded-md bg-red-500 hover:bg-red-600 text-white font-semibold shadow"

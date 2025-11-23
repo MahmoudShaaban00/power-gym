@@ -1,5 +1,17 @@
 import React from "react";
 
+interface FormInputProps {
+  label: string;
+  name: string;
+  type?: string;
+  icon?: React.ReactNode;
+  value: string | number;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
+  error?: string;
+  touched?: boolean;
+}
+
 export default function FormInput({
   label,
   name,
@@ -10,7 +22,7 @@ export default function FormInput({
   onBlur,
   error,
   touched,
-}: any) {
+}: FormInputProps) {
   return (
     <div className="mb-4">
       <label className="font-semibold block mb-1 text-gray-700">{label}</label>

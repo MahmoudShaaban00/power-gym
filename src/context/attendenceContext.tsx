@@ -3,31 +3,17 @@
 import React, { createContext, useContext, ReactNode, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-
-interface Attendance {
-  id: string;
-  memberId: string;
-  date: string;
-  checkInTime?: string;
-  checkOutTime?: string;
-}
-
-interface AttendanceContextType {
-  loading: boolean;
-  markAttendance: (memberId: string, token: string) => Promise<void>;
-  deleteAttendance: (memberId: string, dayDate: string, token: string) => Promise<void>;
-  getMemberAttendances: (memberId: string, token: string) => Promise<Attendance[]>;
-}
+import { AttendanceContextType } from "@/utility/types";
 
 const AttendanceContext = createContext<AttendanceContextType | undefined>(undefined);
 
 export const AttendanceProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(false);
 
-  // MARK ATTENDANCE
+  // ❗ تسجيل الحضور
   const markAttendance = async (memberId: string, token: string) => {
     if (!memberId || !token) {
-      toast.error("Member ID or token missing");
+      toast.error("رقم العضو أو التوكن غير موجود");
       return;
     }
 
@@ -41,19 +27,24 @@ export const AttendanceProvider = ({ children }: { children: ReactNode }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast.success("Attendance marked successfully!");
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error.response?.data || "Failed to mark attendance");
+      toast.success("تم تسجيل الحضور بنجاح!");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error(error);
+        toast.error(error.response?.data || "فشل في تسجيل الحضور");
+      } else {
+        console.error("خطأ غير متوقع", error);
+        toast.error("حدث خطأ غير متوقع");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // DELETE ATTENDANCE
+  // ❗ حذف حضور عضو
   const deleteAttendance = async (memberId: string, dayDate: string, token: string) => {
     if (!memberId || !dayDate || !token) {
-      toast.error("Missing (memberId, date, or token)");
+      toast.error("يوجد بيانات ناقصة (رقم العضو، التاريخ أو التوكن)");
       return;
     }
 
@@ -64,55 +55,58 @@ export const AttendanceProvider = ({ children }: { children: ReactNode }) => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            DayDate: dayDate, // API requires this header
+            DayDate: dayDate,
           },
         }
       );
 
-      toast.success("Attendance deleted!");
-    } catch (error: any) {
-      console.error("Error deleting attendance:", error);
-      toast.error(error.response?.data || "Failed to delete attendance");
+      toast.success("تم حذف الحضور بنجاح!");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error("خطأ أثناء حذف الحضور:", error);
+        toast.error(error.response?.data || "فشل في حذف الحضور");
+      } else {
+        console.error("خطأ غير متوقع", error);
+        toast.error("حدث خطأ غير متوقع");
+      }
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // GET MEMBER ATTENDANCE
-  // GET MEMBER ATTENDANCE
-const getMemberAttendances = async (memberId: string, token: string) => {
-  if (!memberId || !token) return [];
+  // ❗ الحصول على حضور عضو
+  const getMemberAttendances = async (memberId: string, token: string) => {
+    if (!memberId || !token) return [];
 
-  setLoading(true);
-  try {
-    const response = await axios.get(
-      `https://gymadel.runasp.net/api/Attendence/GetMemberAttendences/${memberId}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `https://gymadel.runasp.net/api/Attendence/GetMemberAttendences/${memberId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    console.log("Attendances response:", response.data);
+      const dayDates: string[] = response.data?.data?.dayDate || [];
 
-    const dayDates: string[] = response.data?.data?.dayDate || [];
-
-    return dayDates.map(date => ({
-      id: date,
-      memberId,
-      date,
-    }));
-  } catch (error: any) {
-    // API returns 404 when empty → treat as empty list
-    if (error.response?.status === 404) {
+      return dayDates.map((date) => ({
+        id: date,
+        memberId,
+        date,
+      }));
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          return [];
+        }
+        console.error("خطأ أثناء جلب الحضور:", error);
+      } else {
+        console.error("خطأ غير متوقع:", error);
+      }
       return [];
+    } finally {
+      setLoading(false);
     }
-
-    console.error("Error fetching attendances:", error);
-    return [];
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <AttendanceContext.Provider
@@ -131,6 +125,6 @@ const getMemberAttendances = async (memberId: string, token: string) => {
 export const useAttendance = () => {
   const context = useContext(AttendanceContext);
   if (!context)
-    throw new Error("useAttendance must be used within an AttendanceProvider");
+    throw new Error("useAttendance يجب استخدامه داخل AttendanceProvider");
   return context;
 };

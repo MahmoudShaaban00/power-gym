@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useMember } from "../../../context/memberContext";
 import { useAttendance } from "../../../context/attendenceContext";
 import { toast } from "react-toastify";
+import { Member, Attendance } from "@/utility/types";
 
 export default function MembersPage() {
   const { members, loading, getMembers, deleteMember, updateMember } = useMember();
   const { markAttendance, deleteAttendance, getMemberAttendances } = useAttendance();
 
-  const [editMember, setEditMember] = useState<any>(null);
+  const [editMember, setEditMember] = useState<Member | null>(null);
   const [loadingMap, setLoadingMap] = useState<{ [key: string]: boolean }>({});
-  const [attendanceMap, setAttendanceMap] = useState<{ [memberId: string]: any[] }>({});
+  const [attendanceMap, setAttendanceMap] = useState<{ [memberId: string]: Attendance[] }>({});
   const [showAttendanceMap, setShowAttendanceMap] = useState<{ [memberId: string]: boolean }>({});
   const [searchSubscriptionId, setSearchSubscriptionId] = useState("");
   const [token, setToken] = useState("");
@@ -28,17 +29,18 @@ export default function MembersPage() {
   const handlePrev = () => { if (currentPage > 1) setCurrentPage(p => p - 1); };
 
   // ------------------------
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     const subscriptionId = searchSubscriptionId || "1";
-    await getMembers(subscriptionId, 1000, 1); 
+    await getMembers(subscriptionId, 1000, 1);
     setCurrentPage(1);
-  };
+  }, [searchSubscriptionId, getMembers]);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     if (savedToken) setToken(savedToken);
     fetchMembers();
-  }, []);
+  }, []); // أضف fetchMembers هنا
+
 
   const fetchAttendances = async (memberId: string) => {
     if (!token) return toast.error("Token مفقود");
@@ -82,7 +84,14 @@ export default function MembersPage() {
   const handleSave = async () => {
     if (!editMember) return;
     try {
-      await updateMember(editMember.id, editMember);
+      await updateMember(editMember.id, {
+        fullName: editMember.fullName,
+        email: editMember.email,
+        phoneNumber: editMember.phoneNumber,
+        pay: String(editMember.pay),             // تحويل إلى string
+        restMoney: String(editMember.restMoney), // تحويل إلى string
+        subscriptionId: editMember.subscriptionId,
+      });
       toast.success("تم تحديث العضو!");
       setEditMember(null);
       fetchMembers();
@@ -90,6 +99,7 @@ export default function MembersPage() {
       toast.error("فشل في تحديث العضو");
     }
   };
+
 
   const handleSearch = () => { fetchMembers(); };
 
@@ -121,7 +131,7 @@ export default function MembersPage() {
         <p className="text-center text-gray-500 py-4">لا يوجد أعضاء</p>
       ) : (
         <div className="space-y-6">
-          {paginatedMembers.map((m: any) => (
+          {paginatedMembers.map((m: Member) => (
             <div key={m.id} className="bg-white shadow rounded-lg p-4">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-xl font-semibold">{m.fullName}</h2>
@@ -181,7 +191,7 @@ export default function MembersPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {attendanceMap[m.id].map((att: any) => (
+                        {attendanceMap[m.id].map((att: Attendance) => (
                           <tr key={att.id} className="hover:bg-gray-50">
                             <td className="px-2 py-1 border">{new Date(att.date).toLocaleDateString()}</td>
                             <td className="px-2 py-1 border">{att.checkInTime || "-"}</td>
@@ -260,15 +270,21 @@ export default function MembersPage() {
               <input
                 className="w-full border p-3 rounded-lg"
                 value={editMember.pay}
-                onChange={(e) => setEditMember({ ...editMember, pay: e.target.value })}
+                onChange={(e) =>
+                  setEditMember({ ...editMember, pay: Number(e.target.value) })
+                }
                 placeholder="الدفع"
               />
+
               <input
                 className="w-full border p-3 rounded-lg"
                 value={editMember.restMoney}
-                onChange={(e) => setEditMember({ ...editMember, restMoney: e.target.value })}
+                onChange={(e) =>
+                  setEditMember({ ...editMember, restMoney: Number(e.target.value) })
+                }
                 placeholder="المتبقي"
               />
+
               <input
                 className="w-full border p-3 rounded-lg"
                 value={editMember.subscriptionId}

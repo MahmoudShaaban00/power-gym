@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Member } from "@/utility/types";
 
 export default function Page() {
   const [members, setMembers] = useState([]);
@@ -61,7 +62,7 @@ export default function Page() {
 
           <tbody>
             {members.length > 0 ? (
-              members.map((member: any, index) => (
+              members.map((member:Member, index) => (
                 <tr
                   key={index}
                   className="hover:bg-gray-100 transition-all border-b"

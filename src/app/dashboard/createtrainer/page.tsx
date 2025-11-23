@@ -21,7 +21,10 @@ export default function CreateTrainerPage() {
         .required("رقم الهاتف مطلوب"),
     }),
     onSubmit: async (values) => {
-      await createTrainer({ ...values, specializationIds: selectedSpecializations });
+      await createTrainer({
+        ...values,
+        specializationIds: selectedSpecializations,
+      });
       formik.resetForm();
       setSelectedSpecializations([]);
     },
@@ -31,6 +34,7 @@ export default function CreateTrainerPage() {
     <div className="min-h-screen flex items-center justify-center p-6 bg-gray-100">
       <div className="w-full max-w-2xl bg-white p-8 rounded-3xl shadow-xl">
         <h1 className="text-3xl font-bold text-blue-700 mb-6 text-center">إنشاء مدرب جديد</h1>
+
         <form onSubmit={formik.handleSubmit} className="flex flex-col gap-4">
           <input
             type="text"
@@ -58,20 +62,22 @@ export default function CreateTrainerPage() {
             <p className="text-red-500">{formik.errors.phoneNumber}</p>
           )}
 
-          {/* اختيار التخصصات كمثال */}
-          <label className="font-semibold">اختر التخصصات:</label>
-          <select
-            multiple
-            value={selectedSpecializations.map(String)}
-            onChange={(e) =>
-              setSelectedSpecializations(Array.from(e.target.selectedOptions, option => Number(option.value)))
-            }
+          {/* إدخال التخصصات كأرقام */}
+          <label className="font-semibold">اكتب أرقام التخصصات:</label>
+          <input
+            type="text"
+            placeholder="مثال: 2,3,4"
             className="border p-2 rounded"
-          >
-            <option value={1}>تخصص 1</option>
-            <option value={2}>تخصص 2</option>
-            <option value={3}>تخصص 3</option>
-          </select>
+            value={selectedSpecializations.join(",")}
+            onChange={(e) =>
+              setSelectedSpecializations(
+                e.target.value
+                  .split(",")
+                  .map((num) => Number(num.trim()))
+                  .filter((n) => !isNaN(n))
+              )
+            }
+          />
 
           <button
             type="submit"

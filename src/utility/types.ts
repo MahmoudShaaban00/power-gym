@@ -6,7 +6,6 @@
 export interface SubscriptionFormValues {
   name: string;
   duration: string;
-  phone: string;
   fitnessNumber: string;
   sessionsNumber: number | string;
   inviteCount: number | string;
@@ -77,15 +76,34 @@ export interface Trainer {
 
 
 // ----------------------------
+// Trainer Form Values
+// ----------------------------
+export interface TrainerFormValues {
+  fullName: string;
+  phoneNumber: string;
+  specializationIds: number[];
+}
+
+// ----------------------------
+// Trainer Filter Type
+// ----------------------------
+export interface TrainerFilter {
+  pageIndex?: number;
+  pageSize?: number;
+  search?: string;
+  specializationId?: number;
+}
+
+// ----------------------------
 // Trainer Context Type
 // ----------------------------
 export interface TrainerContextType {
   trainers: Trainer[];
   loading: boolean;
   totalCount: number;
-  getTrainers: (filters: any) => Promise<void>;
-  createTrainer: (values: any) => Promise<void>;
-  updateTrainer: (id: string, values: any) => Promise<void>;
+  getTrainers: (filters: TrainerFilter) => Promise<void>;
+  createTrainer: (values: TrainerFormValues) => Promise<void>;
+  updateTrainer: (id: string, values: TrainerFormValues) => Promise<void>;
   deleteTrainer: (id: string) => Promise<void>;
   totalTrainers: number;
 }
@@ -148,5 +166,20 @@ export interface MemberContextType {
   getMembers: (subscriptionId: string, pageSize: number, pageIndex: number) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
   updateMember: (id: string, values: MemberFormValues) => Promise<void>;
+}
+
+export interface Attendance {
+  id: string;
+  memberId: string;
+  date: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+}
+
+export interface AttendanceContextType {
+  loading: boolean;
+  markAttendance: (memberId: string, token: string) => Promise<void>;
+  deleteAttendance: (memberId: string, dayDate: string, token: string) => Promise<void>;
+  getMemberAttendances: (memberId: string, token: string) => Promise<Attendance[]>;
 }
 
