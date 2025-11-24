@@ -4,10 +4,10 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useMember } from "../../../context/memberContext";
 import { useAttendance } from "../../../context/attendenceContext";
 import { toast } from "react-toastify";
-import { Member, Attendance } from "@/utility/types";
+import { Member, Attendance, ExpiryData } from "@/utility/types";
 
 export default function MembersPage() {
-  const { members, loading, getMembers, deleteMember, updateMember } = useMember();
+  const { members, loading, getMembers, deleteMember, updateMember, getExpiryMember } = useMember();
   const { markAttendance, deleteAttendance, getMemberAttendances } = useAttendance();
 
   const [editMember, setEditMember] = useState<Member | null>(null);
@@ -15,33 +15,44 @@ export default function MembersPage() {
   const [attendanceMap, setAttendanceMap] = useState<{ [memberId: string]: Attendance[] }>({});
   const [showAttendanceMap, setShowAttendanceMap] = useState<{ [memberId: string]: boolean }>({});
   const [searchSubscriptionId, setSearchSubscriptionId] = useState("");
+  const [showExpiryMap, setShowExpiryMap] = useState<{ [key: string]: boolean }>({});
+  const [expiryMap, setExpiryMap] = useState<{ [memberId: string]: ExpiryData | null }>({});
+
   const [token, setToken] = useState("");
 
   // ------------------------
-  //     التقسيم للصفحات
+  // Pagination
   // ------------------------
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
   const totalPages = Math.ceil(members.length / pageSize);
   const paginatedMembers = members.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  const handleNext = () => { if (currentPage < totalPages) setCurrentPage(p => p + 1); };
-  const handlePrev = () => { if (currentPage > 1) setCurrentPage(p => p - 1); };
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage(p => p + 1);
+  };
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage(p => p - 1);
+  };
 
+  // ------------------------
+  // Fetch members
   // ------------------------
   const fetchMembers = useCallback(async () => {
     const subscriptionId = searchSubscriptionId || "1";
     await getMembers(subscriptionId, 1000, 1);
     setCurrentPage(1);
-  }, [searchSubscriptionId, getMembers]);
+  }, []);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     if (savedToken) setToken(savedToken);
     fetchMembers();
-  }, []); // أضف fetchMembers هنا
+  }, []);
 
-
+  // ------------------------
+  // Attendance functions
+  // ------------------------
   const fetchAttendances = async (memberId: string) => {
     if (!token) return toast.error("Token مفقود");
     setLoadingMap(prev => ({ ...prev, [memberId]: true }));
@@ -81,6 +92,9 @@ export default function MembersPage() {
     }
   };
 
+  // ------------------------
+  // Update member
+  // ------------------------
   const handleSave = async () => {
     if (!editMember) return;
     try {
@@ -88,8 +102,8 @@ export default function MembersPage() {
         fullName: editMember.fullName,
         email: editMember.email,
         phoneNumber: editMember.phoneNumber,
-        pay: String(editMember.pay),             // تحويل إلى string
-        restMoney: String(editMember.restMoney), // تحويل إلى string
+        pay: String(editMember.pay),
+        restMoney: String(editMember.restMoney),
         subscriptionId: editMember.subscriptionId,
       });
       toast.success("تم تحديث العضو!");
@@ -100,14 +114,30 @@ export default function MembersPage() {
     }
   };
 
-
+  // ------------------------
+  // Search
+  // ------------------------
   const handleSearch = () => { fetchMembers(); };
 
+  // ------------------------
+  // Fetch expiry data
+  // ------------------------
+  const fetchExpiry = async (memberId: string) => {
+    const expiryData = await getExpiryMember(memberId);
+    if (expiryData) {
+      setExpiryMap(prev => ({ ...prev, [memberId]: expiryData }));
+    }
+    setShowExpiryMap(prev => ({ ...prev, [memberId]: true }));
+  };
+
+  // ------------------------
+  // Render
+  // ------------------------
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">إدارة الأعضاء</h1>
 
-      {/* البحث */}
+      {/* Search */}
       <div className="mb-4 flex gap-2">
         <input
           type="text"
@@ -124,7 +154,7 @@ export default function MembersPage() {
         </button>
       </div>
 
-      {/* قائمة الأعضاء */}
+      {/* Members list */}
       {loading ? (
         <p className="text-gray-500">جارٍ التحميل...</p>
       ) : paginatedMembers.length === 0 ? (
@@ -166,6 +196,25 @@ export default function MembersPage() {
                   >
                     حذف
                   </button>
+                  <button
+                    onClick={() =>
+                      showExpiryMap[m.id]
+                        ? setShowExpiryMap(prev => ({ ...prev, [m.id]: false }))
+                        : fetchExpiry(m.id)
+                    }
+                    className={`${showExpiryMap[m.id] ? "bg-red-500" : "bg-blue-500"} text-white px-3 py-1 rounded`}
+                  >
+                    {showExpiryMap[m.id] ? "إخفاء البيانات" : "عرض تاريخ الانتهاء"}
+                  </button>
+
+                  {showExpiryMap[m.id] && expiryMap[m.id] ? (
+                    <div className="mt-2 text-blue-600 font-semibold">
+                      <p>
+                        تاريخ الانتهاء: {expiryMap[m.id]?.expiryDate ? new Date(expiryMap[m.id]!.expiryDate).toLocaleDateString() : "-"}
+                      </p>
+                      <p>عدد الجلسات المتبقية: {expiryMap[m.id]?.sessionsNumber ?? "-"}</p>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -177,6 +226,7 @@ export default function MembersPage() {
                 <div>رقم الاشتراك: {m.subscriptionId}</div>
               </div>
 
+              {/* Show attendance */}
               {showAttendanceMap[m.id] && (
                 <div>
                   <h3 className="font-semibold mb-2 text-gray-700">حضور العضو:</h3>
@@ -242,12 +292,11 @@ export default function MembersPage() {
         </button>
       </div>
 
-      {/* نافذة تعديل العضو */}
+      {/* Edit Member Modal */}
       {editMember && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-2xl shadow-2xl w-[500px]">
             <h2 className="text-2xl font-bold mb-6 text-gray-700 text-center">تحديث العضو</h2>
-
             <div className="grid grid-cols-1 gap-4">
               <input
                 className="w-full border p-3 rounded-lg"
@@ -270,21 +319,15 @@ export default function MembersPage() {
               <input
                 className="w-full border p-3 rounded-lg"
                 value={editMember.pay}
-                onChange={(e) =>
-                  setEditMember({ ...editMember, pay: Number(e.target.value) })
-                }
+                onChange={(e) => setEditMember({ ...editMember, pay: Number(e.target.value) })}
                 placeholder="الدفع"
               />
-
               <input
                 className="w-full border p-3 rounded-lg"
                 value={editMember.restMoney}
-                onChange={(e) =>
-                  setEditMember({ ...editMember, restMoney: Number(e.target.value) })
-                }
+                onChange={(e) => setEditMember({ ...editMember, restMoney: Number(e.target.value) })}
                 placeholder="المتبقي"
               />
-
               <input
                 className="w-full border p-3 rounded-lg"
                 value={editMember.subscriptionId}
@@ -292,7 +335,6 @@ export default function MembersPage() {
                 placeholder="رقم الاشتراك"
               />
             </div>
-
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={handleSave}
@@ -300,7 +342,6 @@ export default function MembersPage() {
               >
                 حفظ
               </button>
-
               <button
                 onClick={() => setEditMember(null)}
                 className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg"

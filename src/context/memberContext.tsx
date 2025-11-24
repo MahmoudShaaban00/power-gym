@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { MemberFormValues, MemberContextType, Member } from "@/utility/types";
+import { MemberFormValues, Member,ExpiryData ,MemberContextType   } from "@/utility/types";
+
 
 
 
@@ -15,6 +16,7 @@ export const MemberProvider = ({ children }: { children: ReactNode }) => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalMembers, setTotalMembers] = useState(0);
+  const [expiryMap, setExpiryMap] = useState<{ [memberId: string]: ExpiryData | null }>({});
 
   const baseUrl = "https://gymadel.runasp.net/api/Member";
 
@@ -22,26 +24,26 @@ export const MemberProvider = ({ children }: { children: ReactNode }) => {
     Authorization: `Bearer ${localStorage.getItem("token")}`,
   });
 
+  // --------------------------
+  // Create Member
+  // --------------------------
   const createMember = async (values: MemberFormValues) => {
     setLoading(true);
     try {
       const { data } = await axios.post(`${baseUrl}/CreateMember`, values, { headers: authHeader() });
-      toast.success("Member created successfully!");
+      toast.success("تم إنشاء العضو بنجاح!");
       setMembers(prev => [...prev, data]);
     } catch (err: unknown) {
-      console.error("Error creating subscription:", err);
-
-      if (axios.isAxiosError(err)) {
-        toast.error(err.response?.data?.message || "حدث خطأ أثناء إنشاء الاشتراك");
-      } else {
-        toast.error("حدث خطأ غير متوقع");
-      }
-    }
-    finally {
+      console.error(err);
+      toast.error("حدث خطأ أثناء إنشاء العضو");
+    } finally {
       setLoading(false);
     }
   };
 
+  // --------------------------
+  // Get Members
+  // --------------------------
   const getMembers = async (subscriptionId: string, pageSize: number, pageIndex: number) => {
     setLoading(true);
     try {
@@ -49,57 +51,88 @@ export const MemberProvider = ({ children }: { children: ReactNode }) => {
         `${baseUrl}/GetMembers?SubscriptionId=${subscriptionId}&pageSize=${pageSize}&pageIndex=${pageIndex}`,
         { headers: authHeader() }
       );
-
       const realMembers = Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
       setMembers(realMembers);
 
-      const total = res.data?.data?.count || 0; // correct total
+      const total = res.data?.data?.count || 0;
       setTotalCount(total);
       setTotalMembers(total);
       setTotalPages(Math.ceil(total / pageSize));
-    } catch {
-      toast.error("Error fetching members");
+    } catch (err) {
+      console.error(err);
+      toast.error("فشل في جلب الأعضاء");
     } finally {
       setLoading(false);
     }
   };
 
+  // --------------------------
+  // Delete Member
+  // --------------------------
   const deleteMember = async (id: string) => {
     setLoading(true);
     try {
       await axios.delete(`${baseUrl}/DeleteMember/${id}`, { headers: authHeader() });
-      toast.success("Member deleted!");
+      toast.success("تم حذف العضو!");
       setMembers(prev => prev.filter(m => m.id !== id));
     } catch {
-      toast.error("Error deleting member");
+      toast.error("فشل في حذف العضو");
     } finally {
       setLoading(false);
     }
   };
 
+  // --------------------------
+  // Update Member
+  // --------------------------
   const updateMember = async (id: string, values: MemberFormValues) => {
     setLoading(true);
     try {
       const { data } = await axios.put(`${baseUrl}/UpdateMember/${id}`, values, { headers: authHeader() });
       setMembers(prev => prev.map(m => (m.id === id ? { ...m, ...data } : m)));
-      toast.success("Member updated successfully!");
-    } catch (err: unknown) {
-      console.error("Error creating subscription:", err);
-
-      if (axios.isAxiosError(err)) {
-        toast.error(err.response?.data?.message || "حدث خطأ أثناء إنشاء الاشتراك");
-      } else {
-        toast.error("حدث خطأ غير متوقع");
-      }
+      toast.success("تم تحديث العضو بنجاح!");
+    } catch (err) {
+      console.error(err);
+      toast.error("فشل في تحديث العضو");
+    } finally {
+      setLoading(false);
     }
-    finally {
+  };
+
+  // --------------------------
+  // Get Expiry Member
+  // --------------------------
+  const getExpiryMember = async (memberId: string): Promise<ExpiryData | null> => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get(`${baseUrl}/${memberId}/ExpirySessionsAndDate`, { headers: authHeader() });
+      const expiryData = data?.data?.[0] ?? null;
+      setExpiryMap(prev => ({ ...prev, [memberId]: expiryData }));
+      return expiryData;
+    } catch (err) {
+      console.error(err);
+      toast.error("فشل في جلب تاريخ انتهاء الاشتراك");
+      return null;
+    } finally {
       setLoading(false);
     }
   };
 
   return (
     <MemberContext.Provider
-      value={{ createMember, getMembers, deleteMember, updateMember, members, loading, totalPages, totalCount, totalMembers }}
+      value={{
+        createMember,
+        getMembers,
+        deleteMember,
+        updateMember,
+        members,
+        loading,
+        totalPages,
+        totalCount,
+        totalMembers,
+        getExpiryMember,
+        expiryMap,
+      }}
     >
       {children}
     </MemberContext.Provider>

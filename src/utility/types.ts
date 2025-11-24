@@ -166,7 +166,16 @@ export interface MemberContextType {
   getMembers: (subscriptionId: string, pageSize: number, pageIndex: number) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
   updateMember: (id: string, values: MemberFormValues) => Promise<void>;
+  getExpiryMember: (memberId: string) => Promise<ExpiryData | null>;
+  expiryMap:{}
 }
+
+
+export interface ExpiryData {
+  expiryDate: string;
+  sessionsNumber: number;
+}
+
 
 export interface Attendance {
   id: string;
