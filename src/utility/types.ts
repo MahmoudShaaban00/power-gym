@@ -167,7 +167,7 @@ export interface MemberContextType {
   deleteMember: (id: string) => Promise<void>;
   updateMember: (id: string, values: MemberFormValues) => Promise<void>;
   getExpiryMember: (memberId: string) => Promise<ExpiryData | null>;
-  expiryMap:{}
+  expiryMap: { [memberId: string]: ExpiryData | null }; // ← تم التعديل هنا
 }
 
 
