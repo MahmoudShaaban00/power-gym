@@ -5,6 +5,7 @@ import { useMember } from "../../../context/memberContext";
 import { useAttendance } from "../../../context/attendenceContext";
 import { toast } from "react-toastify";
 import { Member, Attendance, ExpiryData } from "@/utility/types";
+import { useRouter } from "next/navigation";
 
 export default function MembersPage() {
   const { members, loading, getMembers, deleteMember, updateMember, getExpiryMember } = useMember();
@@ -17,6 +18,7 @@ export default function MembersPage() {
   const [searchSubscriptionId, setSearchSubscriptionId] = useState("");
   const [showExpiryMap, setShowExpiryMap] = useState<{ [key: string]: boolean }>({});
   const [expiryMap, setExpiryMap] = useState<{ [memberId: string]: ExpiryData | null }>({});
+  const router = useRouter()
 
   const [token, setToken] = useState("");
 
@@ -67,6 +69,7 @@ export default function MembersPage() {
     }
   };
 
+  //handle record attendence
   const handleMarkAttendance = async (memberId: string) => {
     if (!token) return toast.error("Token مفقود");
     setLoadingMap(prev => ({ ...prev, [memberId]: true }));
@@ -81,6 +84,7 @@ export default function MembersPage() {
     }
   };
 
+  //handle delete
   const handleDeleteAttendance = async (memberId: string, dayDate: string) => {
     if (!token) return toast.error("Token مفقود");
     setLoadingMap(prev => ({ ...prev, [memberId]: true }));
@@ -130,6 +134,15 @@ export default function MembersPage() {
     setShowExpiryMap(prev => ({ ...prev, [memberId]: true }));
   };
 
+  //-------------------------
+  // handle id of member
+  //-------------------------
+  const handleIdMember = (memberId: string) => {
+    console.log(memberId)
+    localStorage.setItem("memberId",memberId);
+    router.push("/dashboard/Trainers")
+  }
+
   // ------------------------
   // Render
   // ------------------------
@@ -166,12 +179,16 @@ export default function MembersPage() {
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-xl font-semibold">{m.fullName}</h2>
                 <div className="flex gap-2">
+
+                  {/* button to update info of member */}
                   <button
                     onClick={() => setEditMember(m)}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
                   >
                     تعديل
                   </button>
+
+                  {/* button to record attendence */}
                   <button
                     onClick={() => handleMarkAttendance(m.id)}
                     disabled={loadingMap[m.id]}
@@ -179,6 +196,8 @@ export default function MembersPage() {
                   >
                     {loadingMap[m.id] ? "جارٍ التسجيل..." : "تسجيل الحضور"}
                   </button>
+
+                  {/* button to fetch attendence */}
                   <button
                     onClick={() =>
                       showAttendanceMap[m.id]
@@ -190,12 +209,16 @@ export default function MembersPage() {
                   >
                     {showAttendanceMap[m.id] ? "إغلاق الحضور" : "عرض الحضور"}
                   </button>
+
+                  {/* button to delete member */}
                   <button
                     onClick={() => deleteMember(m.id).then(fetchMembers)}
                     className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
                   >
                     حذف
                   </button>
+
+                  {/* button to show expiry date */}
                   <button
                     onClick={() =>
                       showExpiryMap[m.id]
@@ -206,7 +229,6 @@ export default function MembersPage() {
                   >
                     {showExpiryMap[m.id] ? "إخفاء البيانات" : "عرض تاريخ الانتهاء"}
                   </button>
-
                   {showExpiryMap[m.id] && expiryMap[m.id] ? (
                     <div className="mt-2 text-blue-600 font-semibold">
                       <p>
@@ -215,6 +237,14 @@ export default function MembersPage() {
                       <p>عدد الجلسات المتبقية: {expiryMap[m.id]?.sessionsNumber ?? "-"}</p>
                     </div>
                   ) : null}
+
+                  {/* button to add trainne to trainer */}
+                  <button
+                    onClick={() => handleIdMember(m.id)}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                  >
+                    اختار المدرب
+                  </button>
                 </div>
               </div>
 

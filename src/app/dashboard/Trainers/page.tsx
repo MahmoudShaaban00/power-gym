@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useTrainer } from "../../../context/trainerContext";
 import { TrainerFormValues, Trainer } from "@/utility/types";
+import { useRouter } from "next/navigation";
 
 export default function TrainersListPage() {
   const {
@@ -12,11 +13,13 @@ export default function TrainersListPage() {
     deleteTrainer,
     loading,
     totalCount,
+    addTraineeToTrainer
   } = useTrainer();
 
   const [search, setSearch] = useState("");
   const [specializationIdInput, setSpecializationIdInput] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+    const router = useRouter()
 
   const [editValues, setEditValues] = useState<TrainerFormValues>({
     fullName: "",
@@ -75,6 +78,29 @@ export default function TrainersListPage() {
   };
 
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  // handle add trainne to trainer
+  const handleSelectTrainer = async (trainerId: string) => {
+    const traineeId = localStorage.getItem("memberId");
+
+    console.log("traineeId", traineeId, "trainerId", trainerId);
+
+    if (!traineeId) {
+      alert("لا يوجد متدرب مختار!");
+      return;
+    }
+
+    await addTraineeToTrainer(trainerId, traineeId);
+  };
+
+// 🔵 handle Trainer ID
+  const handleIdTrainer = (trainerId: string) => {
+    console.log(trainerId)
+    localStorage.setItem("trainerId",trainerId);
+    router.push("/dashboard/trainee")
+  }
+
+
 
   return (
     <div className="p-6">
@@ -218,6 +244,18 @@ export default function TrainersListPage() {
                           className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
                         >
                           حذف
+                        </button>
+                        <button
+                          onClick={() => handleSelectTrainer(trainer.id)}
+                          className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
+                        >
+                          اختيار المدرب
+                        </button>
+                          <button
+                          onClick={() => handleIdTrainer(trainer.id)}
+                          className="bg-fuchsia-800 text-white px-3 py-1 rounded hover:bg-fuchsia-500 transition"
+                        >
+                          المتدربين
                         </button>
                       </>
                     )}

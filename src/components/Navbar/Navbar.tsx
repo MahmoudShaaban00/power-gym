@@ -12,6 +12,8 @@ export default function Navbar() {
     router.push("/login");
     localStorage.removeItem("token");
     localStorage.removeItem("idsubscription");
+    localStorage.removeItem("memberId");
+    localStorage.removeItem("trainerId")
   };
 
   return (

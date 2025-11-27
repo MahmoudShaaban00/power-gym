@@ -106,11 +106,19 @@ export interface TrainerContextType {
   updateTrainer: (id: string, values: TrainerFormValues) => Promise<void>;
   deleteTrainer: (id: string) => Promise<void>;
   totalTrainers: number;
+  addTraineeToTrainer: (trainerId: string, traineeId: string) => Promise<void>; // ✅ هنا
+getTraineesOfTrainer: (
+  trainerId: string,
+  search?: string,
+  pageIndex?: number,
+  pageSize?: number
+) => Promise<{ data: Trainee[]; count: number } | null>;
+  deleteTraineeFromTrainer: (trainerId: string, traineeId: string) => Promise<void>; // ✅ أضفنا
 }
 
 // ----------------------------
 // Subscription Context Type
- export interface SubscriptionContextType {
+export interface SubscriptionContextType {
   allSubscriptions: SubscriptionFormValues[];
   getAllSubscription: () => Promise<void>;
   createSubscription: (values: SubscriptionFormValues) => Promise<void>;
@@ -192,3 +200,10 @@ export interface AttendanceContextType {
   getMemberAttendances: (memberId: string, token: string) => Promise<Attendance[]>;
 }
 
+export interface Trainee {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  pay: number;
+}
