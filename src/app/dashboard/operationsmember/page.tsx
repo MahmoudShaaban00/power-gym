@@ -40,11 +40,12 @@ export default function MembersPage() {
   // ------------------------
   // Fetch members
   // ------------------------
-  const fetchMembers = useCallback(async () => {
-    const subscriptionId = searchSubscriptionId || "1";
-    await getMembers(subscriptionId, 1000, 1);
-    setCurrentPage(1);
-  }, []);
+const fetchMembers = useCallback(async () => {
+  const subscriptionId = searchSubscriptionId || "1";
+  await getMembers(subscriptionId, 1000, 1);
+  setCurrentPage(1);
+}, [searchSubscriptionId, getMembers]);
+
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
@@ -63,7 +64,7 @@ export default function MembersPage() {
       setAttendanceMap(prev => ({ ...prev, [memberId]: attendances }));
       setShowAttendanceMap(prev => ({ ...prev, [memberId]: true }));
     } catch {
-      toast.error("فشل في جلب الحضور");
+      toast.error("فشل في جلب الغياب");
     } finally {
       setLoadingMap(prev => ({ ...prev, [memberId]: false }));
     }
@@ -76,7 +77,6 @@ export default function MembersPage() {
     try {
       await markAttendance(memberId, token);
       await fetchAttendances(memberId);
-      toast.success("تم تسجيل الحضور!");
     } catch {
       toast.error("فشل في تسجيل الحضور");
     } finally {
@@ -110,7 +110,6 @@ export default function MembersPage() {
         restMoney: String(editMember.restMoney),
         subscriptionId: editMember.subscriptionId,
       });
-      toast.success("تم تحديث العضو!");
       setEditMember(null);
       fetchMembers();
     } catch {
@@ -194,7 +193,7 @@ export default function MembersPage() {
                     disabled={loadingMap[m.id]}
                     className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
                   >
-                    {loadingMap[m.id] ? "جارٍ التسجيل..." : "تسجيل الحضور"}
+                    {loadingMap[m.id] ? "جارٍ التسجيل..." : "تسجيل الغياب"}
                   </button>
 
                   {/* button to fetch attendence */}
@@ -207,7 +206,7 @@ export default function MembersPage() {
                     disabled={loadingMap[m.id]}
                     className={`${showAttendanceMap[m.id] ? "bg-red-500" : "bg-purple-500"} text-white px-3 py-1 rounded`}
                   >
-                    {showAttendanceMap[m.id] ? "إغلاق الحضور" : "عرض الحضور"}
+                    {showAttendanceMap[m.id] ? "إغلاق الغياب" : "عرض الغياب"}
                   </button>
 
                   {/* button to delete member */}
@@ -282,7 +281,7 @@ export default function MembersPage() {
                                 disabled={loadingMap[m.id]}
                                 className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
                               >
-                                حذف الحضور
+                                حذف الغياب
                               </button>
                             </td>
                           </tr>

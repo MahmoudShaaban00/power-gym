@@ -30,7 +30,7 @@ export const SpecializationProvider = ({ children }: { children: ReactNode }) =>
       await axios.post(`${API}/CreateSpecialization`, { name }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Created successfully!");
+      toast.success("تم اتشاء متخصص بنجاح!");
       await getSpecializations(token);
     } finally {
       setLoading(false);
@@ -43,7 +43,7 @@ export const SpecializationProvider = ({ children }: { children: ReactNode }) =>
       await axios.put(`${API}/UpdateSpecialization/${id}`, { name }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Updated successfully!");
+      toast.success("تم التحديث بنجاح!");
       await getSpecializations(token);
     } finally {
       setLoading(false);
@@ -56,7 +56,7 @@ export const SpecializationProvider = ({ children }: { children: ReactNode }) =>
       await axios.delete(`${API}/DeleteSpecialization/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Deleted successfully!");
+      toast.success("تم الحذف بنجاح!");
       await getSpecializations(token);
     } finally {
       setLoading(false);

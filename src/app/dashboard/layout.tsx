@@ -10,6 +10,7 @@ import { MemberProvider } from "../../context/memberContext";
 import { AttendanceProvider } from "../../context/attendenceContext";
 import { SpecializationProvider } from "../../context/specializationContext";
 import { TrainerContextProvider } from "../../context/trainerContext";
+import { OwnerProvider } from "../../context/ownerContext";
 
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
@@ -32,6 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <AttendanceProvider>
                   <SpecializationProvider>
                     <TrainerContextProvider>
+                      <OwnerProvider >
                       <ToastContainer
                         position="top-right"
                         autoClose={3000}
@@ -45,6 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       />
 
                       {children}
+                      </OwnerProvider>
                     </TrainerContextProvider>
                   </SpecializationProvider>
                 </AttendanceProvider>
