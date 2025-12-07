@@ -4,19 +4,19 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { SubscriptionFormValues, SubscriptionContextType } from "@/utility/types";
+import { Subscription, SubscriptionFormValues, SubscriptionContextType } from "@/utility/types";
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
-  const [allSubscriptions, setAllSubscriptions] = useState<SubscriptionFormValues[]>([]);
+  const [allSubscriptions, setAllSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalSubscriptions, setTotalSubscriptions] = useState(0);
 
   const baseUrl = "https://gymadel.runasp.net/api/Subscription";
 
   // ===========================
-  //          GET
+  //            GET
   // ===========================
   const getAllSubscription = async () => {
     const token = localStorage.getItem("token");
@@ -28,10 +28,9 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const subscriptions = data?.data || [];
+      const subscriptions: Subscription[] = data?.data || [];
       setAllSubscriptions(subscriptions);
       setTotalSubscriptions(subscriptions.length);
-      console.log("Fetched Subscriptions:", subscriptions);
     } catch (err) {
       console.error("Error fetching subscriptions:", err);
       toast.error("فشل جلب الاشتراكات");
@@ -55,13 +54,9 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
 
       toast.success("تم إنشاء الاشتراك بنجاح!");
       await getAllSubscription();
-    } catch (err: unknown) {
-      console.error("Error creating subscription:", err);
-      if (axios.isAxiosError(err)) {
-        toast.error(err.response?.data?.message || "حدث خطأ أثناء إنشاء الاشتراك");
-      } else {
-        toast.error("حدث خطأ غير متوقع");
-      }
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      toast.error( "حدث خطأ أثناء إنشاء الاشتراك");
     } finally {
       setLoading(false);
     }

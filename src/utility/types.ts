@@ -13,6 +13,11 @@ export interface SubscriptionFormValues {
   price: number | string;
 }
 
+// نوع كامل يضيف id القادم من الـ backend
+export interface Subscription extends SubscriptionFormValues {
+  id: number;
+}
+
 // ----------------------------
 // Login Form Values
 // ----------------------------
@@ -35,12 +40,10 @@ export interface MemberFormValues {
   fullName: string;
   email: string;
   phoneNumber: string;
-  pay: string;            // ← string
-  restMoney: string;      // ← string
-  subscriptionId: string; // ← string
+  pay: string;
+  restMoney: string;
+  subscriptionId: string;
 }
-
-
 
 // ----------------------------
 // Generic Input Field Props
@@ -65,23 +68,13 @@ export interface TrainerFormValues {
 }
 
 // ----------------------------
-// Trainer Form Values
+// Trainer Type
 // ----------------------------
 export interface Trainer {
   id: string;
   fullName: string;
   phoneNumber: string;
   specializations: string[];
-}
-
-
-// ----------------------------
-// Trainer Form Values
-// ----------------------------
-export interface TrainerFormValues {
-  fullName: string;
-  phoneNumber: string;
-  specializationIds: number[];
 }
 
 // ----------------------------
@@ -106,20 +99,21 @@ export interface TrainerContextType {
   updateTrainer: (id: string, values: TrainerFormValues) => Promise<void>;
   deleteTrainer: (id: string) => Promise<void>;
   totalTrainers: number;
-  addTraineeToTrainer: (trainerId: string, traineeId: string) => Promise<void>; // ✅ هنا
-getTraineesOfTrainer: (
-  trainerId: string,
-  search?: string,
-  pageIndex?: number,
-  pageSize?: number
-) => Promise<{ data: Trainee[]; count: number } | null>;
-  deleteTraineeFromTrainer: (trainerId: string, traineeId: string) => Promise<void>; // ✅ أضفنا
+  addTraineeToTrainer: (trainerId: string, traineeId: string) => Promise<void>;
+  getTraineesOfTrainer: (
+    trainerId: string,
+    search?: string,
+    pageIndex?: number,
+    pageSize?: number
+  ) => Promise<{ data: Trainee[]; count: number } | null>;
+  deleteTraineeFromTrainer: (trainerId: string, traineeId: string) => Promise<void>;
 }
 
 // ----------------------------
 // Subscription Context Type
+// ----------------------------
 export interface SubscriptionContextType {
-  allSubscriptions: SubscriptionFormValues[];
+  allSubscriptions: Subscription[]; // ← تم إصلاح النوع هنا
   getAllSubscription: () => Promise<void>;
   createSubscription: (values: SubscriptionFormValues) => Promise<void>;
   updateSubscription: (id: number, values: SubscriptionFormValues) => Promise<void>;
@@ -175,15 +169,13 @@ export interface MemberContextType {
   deleteMember: (id: string) => Promise<void>;
   updateMember: (id: string, values: MemberFormValues) => Promise<void>;
   getExpiryMember: (memberId: string) => Promise<ExpiryData | null>;
-  expiryMap: { [memberId: string]: ExpiryData | null }; // ← تم التعديل هنا
+  expiryMap: { [memberId: string]: ExpiryData | null };
 }
-
 
 export interface ExpiryData {
   expiryDate: string;
   sessionsNumber: number;
 }
-
 
 export interface Attendance {
   id: string;

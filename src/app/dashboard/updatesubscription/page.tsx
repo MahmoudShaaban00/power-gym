@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useSubscription } from "@/context/subscriptionContext";
 import { SubscriptionFormValues } from "@/utility/types";
+import { Subscription } from "@/utility/types";
 
 export default function AllSubscriptionsWithUpdate() {
   const {
@@ -67,8 +68,8 @@ useEffect(() => {
               </td>
             </tr>
           ) : (
-            allSubscriptions.map((sub, index) => {
-              const id = index + 1; // أو إذا كان لديك id من الـ backend استخدمه
+            allSubscriptions.map((sub : Subscription) => {
+              const id = sub.id; // أو إذا كان لديك id من الـ backend استخدمه
               return (
                 <tr
                   key={id}
