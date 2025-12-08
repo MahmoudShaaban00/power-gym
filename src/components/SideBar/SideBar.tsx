@@ -18,10 +18,8 @@ import Link from "next/link";
 const links = [
   { name: "التحكم", href: "/dashboard", icon: <FiHome /> },
   { name: "الاعضاء", href: "/dashboard/members", icon: <FiUsers /> },
-  /*
   { name: "انشاء مدير", href: "/dashboard/createowner", icon: <FiUserPlus /> },
   { name: "العمليات على المديرين", href: "/dashboard/operationowner", icon: <FiClipboard /> },
-  */
   { name: "التخصصات", href: "/dashboard/createspecialization", icon: <FiLayers /> },
   { name: "انشاء متخصص", href: "/dashboard/createtrainer", icon: <FiUserPlus /> },
   { name: "المتخصصون", href: "/dashboard/Trainers", icon: <FiUserCheck /> },

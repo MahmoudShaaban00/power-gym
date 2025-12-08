@@ -61,14 +61,14 @@ export const OwnerProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setLoading(true);
       await axios.post<ApiResponse<null>>(
-        "https://gymadel.runasp.net/api/Account/create-employee",
+        "https://gymadel.runasp.net/api/Account/create-owner",
         data,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success("Employee created successfully!");
+      toast.success("تم انشاء مدير بنجاح!");
     } catch (err) {
       const error = err as AxiosError<ApiResponse<null>>;
-      toast.error(error.response?.data?.message || "Network error");
+      toast.error(error.response?.data?.message || "جد فشل انشاء المدير");
     } finally {
       setLoading(false);
     }
@@ -91,7 +91,7 @@ export const OwnerProvider = ({ children }: { children: React.ReactNode }) => {
       return response.data.data || [];
     } catch (err) {
       const error = err as AxiosError<ApiResponse<null>>;
-      toast.error(error.response?.data?.message || "Failed to fetch owners");
+      toast.error(error.response?.data?.message || "فشل جلب المديرين");
       return [];
     } finally {
       setLoading(false);
@@ -109,14 +109,14 @@ export const OwnerProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setLoading(true);
       await axios.delete<ApiResponse<null>>(
-        `https://gymadel.runasp.net/api/Account/DeleteOwner/${id}`,
+        `https://gymadel.runasp.net/api/Account/delete-Owner/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success("Owner deleted successfully!");
+      toast.success("تم حذف المدير بنجاح!");
       return true;
     } catch (err) {
       const error = err as AxiosError<ApiResponse<null>>;
-      toast.error(error.response?.data?.message || "Failed to delete owner");
+      toast.error(error.response?.data?.message || "فشل حذف المدير");
       return false;
     } finally {
       setLoading(false);
@@ -126,28 +126,40 @@ export const OwnerProvider = ({ children }: { children: React.ReactNode }) => {
   // -----------------------------
   // UPDATE OWNER
   // -----------------------------
-  const updateOwner = async (owner: Owner): Promise<boolean> => {
-    if (!token) {
-      toast.error("Unauthorized: No token found");
-      return false;
-    }
-    try {
-      setLoading(true);
-      await axios.put<ApiResponse<null>>(
-        `https://gymadel.runasp.net/api/Account/UpdateOwner/${owner.id}`,
-        owner,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Owner updated successfully!");
-      return true;
-    } catch (err) {
-      const error = err as AxiosError<ApiResponse<null>>;
-      toast.error(error.response?.data?.message || "Failed to update owner");
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
+ const updateOwner = async (owner: Owner): Promise<boolean> => {
+  if (!token) {
+    toast.error("Unauthorized: No token found");
+    return false;
+  }
+
+  try {
+    setLoading(true);
+
+    const payload = {
+      id: owner.id,
+      email: owner.email,
+      fullName: owner.fullName,
+      phoneNumber: owner.phoneNumber,
+      role: owner.role,
+    };
+
+    await axios.put<ApiResponse<null>>(
+      "https://gymadel.runasp.net/api/Account/update-Owner",
+      payload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    toast.success("تم تحديث المدير بنجاح!");
+    return true;
+  } catch (err) {
+    const error = err as AxiosError<ApiResponse<null>>;
+    toast.error(error.response?.data?.message || "فشل تحديث المدير");
+    return false;
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <OwnerContext.Provider
